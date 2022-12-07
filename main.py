@@ -5,6 +5,7 @@ import subprocess
 import gevent.monkey
 from steam.client import SteamClient
 from steam.client.cdn import CDNClient
+from steam.enums import EResult
 from steam.exceptions import SteamError
 from steam.protobufs.content_manifest_pb2 import ContentManifestSignature
 
@@ -20,8 +21,11 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid):
                                         manifest_request_code=manifest_code)
             DecryptionKey = cdn.get_depot_key(manifest.app_id, manifest.depot_id)
             break
-        except SteamError:
-            pass
+        except SteamError as e:
+            print(
+                f'app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}error: {e.message} result: {str(e.eresult)}')
+            if e.eresult == EResult.AccessDenied:
+                return
     print(
         f'app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}DecryptionKey: {DecryptionKey.hex()}')
     manifest.decrypt_filenames(DecryptionKey)
