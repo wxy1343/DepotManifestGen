@@ -5,9 +5,11 @@ import argparse
 import subprocess
 import gevent.monkey
 from pathlib import Path
+
+from six import itervalues, iteritems
 from steam.client import SteamClient
 from steam.client.cdn import CDNClient
-from steam.enums import EResult
+from steam.enums import EResult, EType
 from steam.exceptions import SteamError
 from steam.protobufs.content_manifest_pb2 import ContentManifestSignature
 
@@ -23,6 +25,8 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid):
                                         manifest_request_code=manifest_code)
             DecryptionKey = cdn.get_depot_key(manifest.app_id, manifest.depot_id)
             break
+        except KeyboardInterrupt:
+            exit(-1)
         except SteamError as e:
             logging.warning(
                 f'{"":<10}app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}error: {e.message} result: {str(e.eresult)}')
@@ -83,6 +87,31 @@ class MySteamClient(SteamClient):
             return SteamClient._get_sentry_path(self, username)
 
 
+class MyCDNClient(CDNClient):
+    packages_info = None
+
+    def load_licenses(self):
+        """Read licenses from SteamClient instance, required for determining accessible content"""
+        self.licensed_app_ids.clear()
+        self.licensed_depot_ids.clear()
+
+        if self.steam.steam_id.type == EType.AnonUser:
+            packages = [17906]
+        else:
+            if not self.steam.licenses:
+                self._LOG.debug("No steam licenses found on SteamClient instance")
+                return
+
+            packages = list(map(lambda l: {'packageid': l.package_id, 'access_token': l.access_token},
+                                itervalues(self.steam.licenses)))
+
+        self.packages_info = self.steam.get_product_info(packages=packages)['packages']
+
+        for package_id, info in iteritems(self.packages_info):
+            self.licensed_app_ids.update(info['appids'].values())
+            self.licensed_depot_ids.update(info['depotids'].values())
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-u', '--username', required=True)
 parser.add_argument('-p', '--password', required=False, default='')
@@ -128,16 +157,14 @@ if __name__ == '__main__':
     appids_all = set()
     depotids = []
     packages_info = []
-    packages = list(
-        map(lambda l: {'packageid': l.package_id, 'access_token': l.access_token}, steam.licenses.values()))
-    if packages:
-        for package_id, info in steam.get_product_info(packages=packages)['packages'].items():
-            if info['depotids'] and 1 < info['billingtype'] < 12:
+    cdn = MyCDNClient(steam)
+    if cdn.packages_info:
+        for package_id, info in steam.get_product_info(packages=cdn.packages_info)['packages'].items():
+            if info['depotids'] and info['billingtype'] == 10:
                 appids_all.update(list(info['appids'].values()))
                 appids.extend(list(info['appids'].values()))
                 depotids.extend(list(info['depotids'].values()))
                 packages_info.append((list(info['appids'].values()), list(info['depotids'].values())))
-    cdn = CDNClient(steam)
     if args.app_id:
         appids = {int(app_id) for app_id in args.app_id.split(',')}
         appids_all.update(appids)
@@ -157,4 +184,7 @@ if __name__ == '__main__':
                         depot_id) in cdn.licensed_depot_ids:
                     result_list.append(gevent.spawn(get_manifest, cdn, app_id, depot_id, depot['manifests']['public']))
                     gevent.idle()
-            gevent.joinall(result_list)
+            try:
+                gevent.joinall(result_list)
+            except KeyboardInterrupt:
+                exit(-1)
