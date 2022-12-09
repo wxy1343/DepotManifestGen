@@ -26,6 +26,7 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid):
                 f'app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}error: {e.message} result: {str(e.eresult)}')
             if e.eresult == EResult.AccessDenied:
                 return
+            gevent.idle()
     print(
         f'app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}DecryptionKey: {DecryptionKey.hex()}')
     manifest.decrypt_filenames(DecryptionKey)
@@ -96,4 +97,5 @@ if __name__ == '__main__':
                 if 'manifests' in depot and 'public' in depot['manifests'] and int(
                         depot_id) in cdn.licensed_depot_ids:
                     result_list.append(gevent.spawn(get_manifest, cdn, app_id, depot_id, depot['manifests']['public']))
+                    gevent.idle()
             gevent.joinall(result_list)
