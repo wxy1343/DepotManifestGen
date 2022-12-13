@@ -13,6 +13,19 @@ from steam.enums import EResult, EType
 from steam.exceptions import SteamError
 from steam.protobufs.content_manifest_pb2 import ContentManifestSignature
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-u', '--username', required=True)
+parser.add_argument('-p', '--password', required=False, default='')
+parser.add_argument('-a', '--app-id', required=False)
+parser.add_argument('-l', '--list-apps', action='store_true', required=False)
+parser.add_argument('-s', '--sentry-path', '--ssfn', required=False)
+parser.add_argument('-k', '--login-key', required=False)
+parser.add_argument('-f', '--two-factor-code', required=False)
+parser.add_argument('-A', '--auth-code', required=False)
+parser.add_argument('-i', '--login-id', required=False)
+parser.add_argument('-c', '--cli', action='store_true', required=False)
+parser.add_argument('-L', '--level', required=False, default='INFO')
+
 
 def get_manifest(cdn, app_id, depot_id, manifest_gid):
     path = f'depots/{app_id}/{depot_id}_{manifest_gid}.manifest'
@@ -75,7 +88,7 @@ class MySteamClient(SteamClient):
     def _handle_login_key(self, message):
         SteamClient._handle_login_key(self, message)
         with open(f'{self.username}.key', 'w') as f:
-            f.write(steam.login_key)
+            f.write(self.login_key)
 
     def _handle_logon(self, msg):
         SteamClient._handle_logon(self, msg)
@@ -112,21 +125,11 @@ class MyCDNClient(CDNClient):
             self.licensed_depot_ids.update(info['depotids'].values())
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-u', '--username', required=True)
-parser.add_argument('-p', '--password', required=False, default='')
-parser.add_argument('-a', '--app-id', required=False)
-parser.add_argument('-l', '--list-apps', action='store_true', required=False)
-parser.add_argument('-s', '--sentry-path', '--ssfn', required=False)
-parser.add_argument('-k', '--login-key', required=False)
-parser.add_argument('-f', '--two-factor-code', required=False)
-parser.add_argument('-A', '--auth-code', required=False)
-parser.add_argument('-i', '--login-id', required=False)
-parser.add_argument('-c', '--cli', action='store_true', required=False)
-parser.add_argument('-L', '--level', required=False, default='INFO')
-
-if __name__ == '__main__':
-    args = parser.parse_args()
+def main(args=None):
+    if args:
+        args = parser.parse_args(args)
+    else:
+        args = parser.parse_args()
     if args.level:
         level = logging.getLevelName(args.level.upper())
     else:
@@ -188,3 +191,7 @@ if __name__ == '__main__':
                 gevent.joinall(result_list)
             except KeyboardInterrupt:
                 exit(-1)
+
+
+if __name__ == '__main__':
+    main()
