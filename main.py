@@ -1,6 +1,7 @@
 import vdf
 import logging
 import os.path
+import platform
 import argparse
 import subprocess
 import gevent.monkey
@@ -25,12 +26,27 @@ parser.add_argument('-A', '--auth-code', required=False)
 parser.add_argument('-i', '--login-id', required=False)
 parser.add_argument('-c', '--cli', action='store_true', required=False)
 parser.add_argument('-L', '--level', required=False, default='INFO')
+parser.add_argument('-C', '--credential-location', required=False)
+parser.add_argument('-r', '--remove-old', action='store_true', required=False)
 
 
-def get_manifest(cdn, app_id, depot_id, manifest_gid):
-    path = f'depots/{app_id}/{depot_id}_{manifest_gid}.manifest'
-    if os.path.exists(path):
-        return
+class Result:
+    def __init__(self, result=False, code=EResult.Fail, *args):
+        self.result = result
+        self.args = args
+        self.code = code
+
+    def __bool__(self):
+        return self.result
+
+
+def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_path=None, retry_num=10):
+    if not save_path:
+        save_path = Path().absolute()
+    app_path = save_path / f'depots/{app_id}'
+    manifest_path = app_path / f'{depot_id}_{manifest_gid}.manifest'
+    if manifest_path.exists():
+        return Result(False, EResult.Fail, app_id, depot_id, manifest_gid)
     while True:
         try:
             manifest_code = cdn.get_manifest_request_code(app_id, depot_id, manifest_gid)
@@ -41,10 +57,13 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid):
         except KeyboardInterrupt:
             exit(-1)
         except SteamError as e:
+            if retry_num == 0:
+                return Result(False, e.eresult, app_id, depot_id, manifest_gid)
+            retry_num -= 1
             logging.warning(
                 f'{"":<10}app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}error: {e.message} result: {str(e.eresult)}')
             if e.eresult == EResult.AccessDenied:
-                return
+                return Result(False, e.eresult, app_id, depot_id, manifest_gid)
             gevent.idle()
     logging.info(
         f'{"":<10}app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}DecryptionKey: {DecryptionKey.hex()}')
@@ -54,33 +73,46 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid):
         mapping.filename = mapping.filename.rstrip('\x00 \n\t')
         mapping.chunks.sort(key=lambda x: x.sha)
     manifest.payload.mappings.sort(key=lambda x: x.filename.lower())
-    if not os.path.exists(f'depots/{app_id}'):
-        os.makedirs(f'depots/{app_id}')
-    if os.path.isfile(f'depots/{app_id}/config.vdf'):
-        with open(f'depots/{app_id}/config.vdf') as f:
+    if not os.path.exists(app_path):
+        os.makedirs(app_path)
+    if os.path.isfile(app_path / 'config.vdf'):
+        with open(app_path / 'config.vdf') as f:
             d = vdf.load(f)
     else:
         d = vdf.VDFDict({'depots': {}})
     d['depots'][depot_id] = {'DecryptionKey': DecryptionKey.hex()}
     d = {'depots': dict(sorted(d['depots'].items()))}
-    with open(f'depots/{app_id}/config.vdf', 'w') as f:
+    with open(app_path / 'config.vdf', 'w') as f:
         vdf.dump(d, f, pretty=True)
-    with open(path, 'wb') as f:
+    if remove_old:
+        for file in app_path.iterdir():
+            if file.suffix == '.manifest' and file.stem.split('_')[0] == depot_id:
+                file.unlink(missing_ok=True)
+                break
+    with open(manifest_path, 'wb') as f:
         f.write(manifest.serialize(compress=False))
     manifest.metadata.crc_clear = int(
-        subprocess.check_output([Path(os.path.dirname(__file__)) / 'calc_crc_clear',
-                                 f'depots/{app_id}/{depot_id}_{manifest_gid}.manifest']).strip())
-    with open(path, 'wb') as f:
+        subprocess.check_output([Path(
+            os.path.dirname(__file__)) / f'calc_crc_clear{".exe" if platform.system().lower() == "windows" else ""}',
+                                 manifest_path]).strip())
+    with open(manifest_path, 'wb') as f:
         f.write(manifest.serialize(compress=False))
-    return app_id, depot_id, manifest_gid
+    return Result(True, EResult.OK, app_id, depot_id, manifest_gid)
 
 
 class MySteamClient(SteamClient):
-    credential_location = str(Path().absolute())
+    credential_location = str(Path('client').absolute())
     _LOG = logging.getLogger('DepotManifestGen')
     sentry_path = None
+    login_key_path = None
 
-    def __init__(self):
+    def __init__(self, credential_location=None, sentry_path=None):
+        if credential_location:
+            self.credential_location = credential_location
+        if not Path(self.credential_location).exists():
+            Path(self.credential_location).mkdir(parents=True, exist_ok=True)
+        if sentry_path and Path(sentry_path).exists():
+            self.sentry_path = sentry_path
         SteamClient.__init__(self)
 
     def _handle_update_machine_auth(self, message):
@@ -88,7 +120,7 @@ class MySteamClient(SteamClient):
 
     def _handle_login_key(self, message):
         SteamClient._handle_login_key(self, message)
-        with open(f'{self.username}.key', 'w') as f:
+        with (Path(self.credential_location) / f'{self.username}.key').open('w') as f:
             f.write(self.login_key)
 
     def _handle_logon(self, msg):
@@ -99,6 +131,21 @@ class MySteamClient(SteamClient):
             return self.sentry_path
         else:
             return SteamClient._get_sentry_path(self, username)
+
+    def relogin(self):
+        result = SteamClient.relogin(self)
+        if result == EResult.InvalidPassword and self.login_key_path:
+            self.login_key_path.unlink(missing_ok=True)
+        return result
+
+    def __setattr__(self, key, value):
+        SteamClient.__setattr__(self, key, value)
+        if key == 'username':
+            if not self.login_key_path:
+                self.login_key_path = Path(self.credential_location) / f'{self.username}.key'
+                if not self.login_key and self.login_key_path.exists():
+                    with self.login_key_path.open() as f:
+                        self.login_key = f.read()
 
 
 class MyCDNClient(CDNClient):
@@ -136,18 +183,11 @@ def main(args=None):
     else:
         level = logging.INFO
     logging.basicConfig(format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s', level=level)
-    steam = MySteamClient()
-    if args.sentry_path:
-        steam.sentry_path = args.sentry_path
-    login_key_path = Path(steam.credential_location) / f'{args.username}.key'
+    steam = MySteamClient(args.credential_location, args.sentry_path)
     steam.username = args.username
-    result = None
-    if not args.login_key and login_key_path.exists():
-        with login_key_path.open() as f:
-            steam.login_key = f.read()
-        result = steam.relogin()
-        if result == EResult.InvalidPassword:
-            login_key_path.unlink(missing_ok=True)
+    if args.login_key:
+        steam.login_key = args.login_key
+    result = steam.relogin()
     if result != EResult.OK:
         if args.cli:
             result = steam.cli_login(args.username, args.password)
@@ -157,41 +197,42 @@ def main(args=None):
     if result != EResult.OK:
         logging.error(f'Login failure reason: {result.__repr__()}')
         exit(result)
-    appids = []
-    appids_all = set()
-    depotids = []
+    app_id_list = []
+    app_id_list_all = set()
+    depot_id_list = []
     packages_info = []
     cdn = MyCDNClient(steam)
     if cdn.packages_info:
         for package_id, info in steam.get_product_info(packages=cdn.packages_info)['packages'].items():
             if info['depotids'] and info['billingtype'] == 10:
-                appids_all.update(list(info['appids'].values()))
-                appids.extend(list(info['appids'].values()))
-                depotids.extend(list(info['depotids'].values()))
+                app_id_list_all.update(list(info['appids'].values()))
+                app_id_list.extend(list(info['appids'].values()))
+                depot_id_list.extend(list(info['depotids'].values()))
                 packages_info.append((list(info['appids'].values()), list(info['depotids'].values())))
     if args.app_id:
-        appids = {int(app_id) for app_id in args.app_id.split(',')}
-        appids_all.update(appids)
-    fresh_resp = steam.get_product_info(appids)
+        app_id_list = {int(app_id) for app_id in args.app_id.split(',')}
+        app_id_list_all.update(app_id_list)
+    fresh_resp = steam.get_product_info(app_id_list)
     if args.list_apps:
-        for app_id in appids_all:
+        for app_id in app_id_list_all:
             app = fresh_resp['apps'][app_id]
             if 'common' in app and app['common']['type'].lower() == 'game':
                 logging.info("%s %s", app_id, app['common']['name'])
         exit()
-    for app_id in appids:
+    result_list = []
+    for app_id in app_id_list:
         app = fresh_resp['apps'][app_id]
         if 'common' in app and app['common']['type'].lower() == 'game':
-            result_list = []
             for depot_id, depot in fresh_resp['apps'][app_id]['depots'].items():
                 if 'manifests' in depot and 'public' in depot['manifests'] and int(
                         depot_id) in cdn.licensed_depot_ids:
-                    result_list.append(gevent.spawn(get_manifest, cdn, app_id, depot_id, depot['manifests']['public']))
+                    result_list.append(gevent.spawn(get_manifest, cdn, app_id, depot_id, depot['manifests']['public'],
+                                                    args.remove_old))
                     gevent.idle()
-            try:
-                gevent.joinall(result_list)
-            except KeyboardInterrupt:
-                exit(-1)
+    try:
+        gevent.joinall(result_list)
+    except KeyboardInterrupt:
+        exit(-1)
 
 
 if __name__ == '__main__':
