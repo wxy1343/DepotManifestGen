@@ -1,5 +1,5 @@
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 unsigned int a[] = {
 	0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3,
 	0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91,
@@ -128,8 +128,7 @@ unsigned int a[] = {
 	0xD67F4138, 0x6EC3265D, 0x7C7689B3, 0xC4CAEED6, 0x591DD66F, 0xE1A1B10A, 0xF3141EE4, 0x4BA87981,
 	0x13CB69D7, 0xAB770EB2, 0xB9C2A15C, 0x017EC639, 0x9CA9FE80, 0x241599E5, 0x36A0360B, 0x8E1C516E,
 	0x866616A7, 0x3EDA71C2, 0x2C6FDE2C, 0x94D3B949, 0x090481F0, 0xB1B8E695, 0xA30D497B, 0x1BB12E1E,
-	0x43D23E48, 0xFB6E592D, 0xE9DBF6C3, 0x516791A6, 0xCCB0A91F, 0x740CCE7A, 0x66B96194, 0xDE0506F1
-};
+	0x43D23E48, 0xFB6E592D, 0xE9DBF6C3, 0x516791A6, 0xCCB0A91F, 0x740CCE7A, 0x66B96194, 0xDE0506F1};
 unsigned int b[] = {
 	0x00000000, 0xB8BC6765, 0xAA09C88B, 0x12B5AFEE, 0x8F629757, 0x37DEF032, 0x256B5FDC, 0x9DD738B9,
 	0xC5B428EF, 0x7D084F8A, 0x6FBDE064, 0xD7018701, 0x4AD6BFB8, 0xF26AD8DD, 0xE0DF7733, 0x58631056,
@@ -162,8 +161,7 @@ unsigned int b[] = {
 	0xD67F4138, 0x6EC3265D, 0x7C7689B3, 0xC4CAEED6, 0x591DD66F, 0xE1A1B10A, 0xF3141EE4, 0x4BA87981,
 	0x13CB69D7, 0xAB770EB2, 0xB9C2A15C, 0x017EC639, 0x9CA9FE80, 0x241599E5, 0x36A0360B, 0x8E1C516E,
 	0x866616A7, 0x3EDA71C2, 0x2C6FDE2C, 0x94D3B949, 0x090481F0, 0xB1B8E695, 0xA30D497B, 0x1BB12E1E,
-	0x43D23E48, 0xFB6E592D, 0xE9DBF6C3, 0x516791A6, 0xCCB0A91F, 0x740CCE7A, 0x66B96194, 0xDE0506F1
-};
+	0x43D23E48, 0xFB6E592D, 0xE9DBF6C3, 0x516791A6, 0xCCB0A91F, 0x740CCE7A, 0x66B96194, 0xDE0506F1};
 unsigned int c[] = {
 	0x00000000, 0x01C26A37, 0x0384D46E, 0x0246BE59, 0x0709A8DC, 0x06CBC2EB, 0x048D7CB2, 0x054F1685,
 	0x0E1351B8, 0x0FD13B8F, 0x0D9785D6, 0x0C55EFE1, 0x091AF964, 0x08D89353, 0x0A9E2D0A, 0x0B5C473D,
@@ -196,8 +194,7 @@ unsigned int c[] = {
 	0xA9E2D0A0, 0xA820BA97, 0xAA6604CE, 0xABA46EF9, 0xAEEB787C, 0xAF29124B, 0xAD6FAC12, 0xACADC625,
 	0xA7F18118, 0xA633EB2F, 0xA4755576, 0xA5B73F41, 0xA0F829C4, 0xA13A43F3, 0xA37CFDAA, 0xA2BE979D,
 	0xB5C473D0, 0xB40619E7, 0xB640A7BE, 0xB782CD89, 0xB2CDDB0C, 0xB30FB13B, 0xB1490F62, 0xB08B6555,
-	0xBBD72268, 0xBA15485F, 0xB853F606, 0xB9919C31, 0xBCDE8AB4, 0xBD1CE083, 0xBF5A5EDA, 0xBE9834ED
-};
+	0xBBD72268, 0xBA15485F, 0xB853F606, 0xB9919C31, 0xBCDE8AB4, 0xBD1CE083, 0xBF5A5EDA, 0xBE9834ED};
 unsigned int d[] = {
 	0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3,
 	0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91,
@@ -230,8 +227,7 @@ unsigned int d[] = {
 	0xA00AE278, 0xD70DD2EE, 0x4E048354, 0x3903B3C2, 0xA7672661, 0xD06016F7, 0x4969474D, 0x3E6E77DB,
 	0xAED16A4A, 0xD9D65ADC, 0x40DF0B66, 0x37D83BF0, 0xA9BCAE53, 0xDEBB9EC5, 0x47B2CF7F, 0x30B5FFE9,
 	0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF,
-	0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
-};
+	0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D};
 unsigned int e[] = {
 	0x00000000, 0x191B3141, 0x32366282, 0x2B2D53C3, 0x646CC504, 0x7D77F445, 0x565AA786, 0x4F4196C7,
 	0xC8D98A08, 0xD1C2BB49, 0xFAEFE88A, 0xE3F4D9CB, 0xACB54F0C, 0xB5AE7E4D, 0x9E832D8E, 0x87981CCF,
@@ -264,14 +260,13 @@ unsigned int e[] = {
 	0x5E7EF3EC, 0x4765C2AD, 0x6C48916E, 0x7553A02F, 0x3A1236E8, 0x230907A9, 0x0824546A, 0x113F652B,
 	0x96A779E4, 0x8FBC48A5, 0xA4911B66, 0xBD8A2A27, 0xF2CBBCE0, 0xEBD08DA1, 0xC0FDDE62, 0xD9E6EF23,
 	0x14BCE1BD, 0x0DA7D0FC, 0x268A833F, 0x3F91B27E, 0x70D024B9, 0x69CB15F8, 0x42E6463B, 0x5BFD777A,
-	0xDC656BB5, 0xC57E5AF4, 0xEE530937, 0xF7483876, 0xB809AEB1, 0xA1129FF0, 0x8A3FCC33, 0x9324FD72
-};
+	0xDC656BB5, 0xC57E5AF4, 0xEE530937, 0xF7483876, 0xB809AEB1, 0xA1129FF0, 0x8A3FCC33, 0x9324FD72};
 unsigned int x[] = {
-	0x54442BD4, 0x00000001, 0xC6E41596, 0x00000001
-};
-int __cdecl crc2(unsigned int *crc_clear, unsigned int *content_offset, int content_length) {
+	0x54442BD4, 0x00000001, 0xC6E41596, 0x00000001};
+int __cdecl crc2(unsigned int *crc_clear, unsigned int *content_offset, int content_length)
+{
 	__asm(
-	    "mov 0xc(%ebp),%edx;\
+		"mov 0xc(%ebp),%edx;\
 	    sub $0x40,%esp;\
 		mov 8(%ebp),%eax;\
 		push %eax;\
@@ -374,9 +369,10 @@ int __cdecl crc2(unsigned int *crc_clear, unsigned int *content_offset, int cont
 		add $0x40,%esp;\
 		mov %eax,(%ecx);");
 }
-unsigned int __cdecl crc1(unsigned int *a1, unsigned __int8 *a2, int a3, int a4) {
+unsigned int __cdecl crc1(unsigned int *a1, unsigned char *a2, int a3, int a4)
+{
 	__asm(
-	    "push %ecx;\
+		"push %ecx;\
 		mov 8(%ebp),%ecx;\
 		push %ebx;\
 		mov 0xc(%ebp),%ebx;\
@@ -463,37 +459,43 @@ unsigned int __cdecl crc1(unsigned int *a1, unsigned __int8 *a2, int a3, int a4)
 		pop %ebx;\
 		pop %ecx");
 }
-__declspec(dllexport) unsigned int calc_crc_clear(char* path) {
-	unsigned char* payload;
-	unsigned int crc_clear=0xFFFFFFFF;
-	FILE* fp=fopen(path,"rb");
+__declspec(dllexport) unsigned int calc_crc_clear(char *path)
+{
+	unsigned char *payload;
+	unsigned int crc_clear = 0xFFFFFFFF;
+	FILE *fp = fopen(path, "rb");
 	unsigned int magic;
-	fread((char*)&magic,4,1,fp);
-	if(magic!=0x71F617D0) {
+	fread((char *)&magic, 4, 1, fp);
+	if (magic != 0x71F617D0)
+	{
 		fclose(fp);
 		return magic;
 	}
 	unsigned int content_length;
-	fread((char*)&content_length,4,1,fp);
-	payload=(unsigned char*)malloc(content_length+8);
-	fread((char*)(payload+8),1,content_length,fp);
-	*(unsigned int*)payload=magic;
-	*(unsigned int*)(payload+4)=content_length;
+	fread((char *)&content_length, 4, 1, fp);
+	payload = (unsigned char *)malloc(content_length + 8);
+	fread((char *)(payload + 8), 1, content_length, fp);
+	*(unsigned int *)payload = magic;
+	*(unsigned int *)(payload + 4) = content_length;
 	fclose(fp);
-	crc1(&crc_clear,(unsigned char *)&content_length,4,(unsigned int)a);
-	crc2(&crc_clear,(unsigned int *)(payload+8),((unsigned int)content_length >> 6) - 1);
-	crc1(&crc_clear,payload+8+content_length-(content_length&0x3f),content_length&0x3f,(unsigned int)a);
-	crc_clear=~crc_clear;
+	crc1(&crc_clear, (unsigned char *)&content_length, 4, (unsigned int)a);
+	crc2(&crc_clear, (unsigned int *)(payload + 8), ((unsigned int)content_length >> 6) - 1);
+	crc1(&crc_clear, payload + 8 + content_length - (content_length & 0x3f), content_length & 0x3f, (unsigned int)a);
+	crc_clear = ~crc_clear;
 	return crc_clear;
 }
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 	unsigned int crc_clear;
-	if (argc==2) {
-		crc_clear=calc_crc_clear(argv[1]);
-	} else {
+	if (argc == 2)
+	{
+		crc_clear = calc_crc_clear(argv[1]);
+	}
+	else
+	{
 		char path[260];
 		gets(path);
-		crc_clear=calc_crc_clear(path);
+		crc_clear = calc_crc_clear(path);
 	}
-	printf("%u",crc_clear);
+	printf("%u", crc_clear);
 }

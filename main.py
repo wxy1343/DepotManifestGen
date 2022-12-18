@@ -68,7 +68,8 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid):
     with open(path, 'wb') as f:
         f.write(manifest.serialize(compress=False))
     manifest.metadata.crc_clear = int(
-        subprocess.check_output(['calc_crc_clear', f'depots/{app_id}/{depot_id}_{manifest_gid}.manifest']).strip())
+        subprocess.check_output([Path(os.path.dirname(__file__)) / 'calc_crc_clear',
+                                 f'depots/{app_id}/{depot_id}_{manifest_gid}.manifest']).strip())
     with open(path, 'wb') as f:
         f.write(manifest.serialize(compress=False))
     return app_id, depot_id, manifest_gid
