@@ -86,9 +86,10 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
         vdf.dump(d, f, pretty=True)
     if remove_old:
         for file in app_path.iterdir():
-            if file.suffix == '.manifest' and file.stem.split('_')[0] == depot_id:
-                file.unlink(missing_ok=True)
-                break
+            if file.suffix == '.manifest':
+                depot_id_, manifest_gid_ = file.stem.split('_')
+                if depot_id_ == str(depot_id) and manifest_gid_ != str(manifest_gid):
+                    file.unlink(missing_ok=True)
     with open(manifest_path, 'wb') as f:
         f.write(manifest.serialize(compress=False))
     manifest.metadata.crc_clear = int(
