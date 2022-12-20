@@ -44,7 +44,7 @@ for mapping in manifest.payload.mappings:
 # 对文件名排序
 manifest.payload.mappings.sort(key=lambda x: x.filename.lower())
 # 通过payload计算crc_clear
-manifest.metadata.crc_clear = calc_clear_crc(payload)
+manifest.metadata.crc_clear = calc_clear_crc(manifest.payload)
 ```
 
 * `crc_clear`计算
