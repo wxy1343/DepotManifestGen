@@ -46,7 +46,7 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
     app_path = save_path / f'depots/{app_id}'
     manifest_path = app_path / f'{depot_id}_{manifest_gid}.manifest'
     if manifest_path.exists():
-        return Result(False, EResult.Fail, app_id, depot_id, manifest_gid)
+        return Result(True, EResult.OK, app_id, depot_id, manifest_gid)
     while True:
         try:
             manifest_code = cdn.get_manifest_request_code(app_id, depot_id, manifest_gid)
