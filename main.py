@@ -205,7 +205,7 @@ def main(args=None):
     cdn = MyCDNClient(steam)
     if cdn.packages_info:
         for package_id, info in steam.get_product_info(packages=cdn.packages_info)['packages'].items():
-            if info['depotids'] and info['billingtype'] == 10:
+            if 'depotids' in info and info['depotids'] and info['billingtype'] == 10:
                 app_id_list_all.update(list(info['appids'].values()))
                 app_id_list.extend(list(info['appids'].values()))
                 depot_id_list.extend(list(info['depotids'].values()))
