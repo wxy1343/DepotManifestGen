@@ -86,8 +86,6 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
         d = vdf.VDFDict({'depots': {}})
     d['depots'][depot_id] = {'DecryptionKey': DecryptionKey.hex()}
     d = {'depots': dict(sorted(d['depots'].items()))}
-    with open(app_path / 'config.vdf', 'w') as f:
-        vdf.dump(d, f, pretty=True)
     if remove_old:
         for file in app_path.iterdir():
             if file.suffix == '.manifest':
@@ -102,6 +100,8 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
                                  manifest_path]).strip())
     with open(manifest_path, 'wb') as f:
         f.write(manifest.serialize(compress=False))
+    with open(app_path / 'config.vdf', 'w') as f:
+        vdf.dump(d, f, pretty=True)
     return Result(True, EResult.OK, app_id, depot_id, manifest_gid)
 
 
