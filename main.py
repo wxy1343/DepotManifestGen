@@ -1,10 +1,11 @@
 import vdf
+import gevent
 import logging
 import os.path
 import platform
 import argparse
+import traceback
 import subprocess
-import gevent.monkey
 from pathlib import Path
 
 from six import itervalues, iteritems
@@ -65,6 +66,9 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
             if e.eresult == EResult.AccessDenied:
                 return Result(False, e.eresult, app_id, depot_id, manifest_gid)
             gevent.idle()
+        except:
+            logging.error(traceback.format_exc())
+            return Result(False, EResult.Fail, app_id, depot_id, manifest_gid)
     logging.info(
         f'{"":<10}app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}DecryptionKey: {DecryptionKey.hex()}')
     manifest.decrypt_filenames(DecryptionKey)
