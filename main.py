@@ -31,6 +31,27 @@ parser.add_argument('-C', '--credential-location', required=False)
 parser.add_argument('-r', '--remove-old', action='store_true', required=False)
 
 
+class BillingType:
+    NoCost = 0
+    BillOnceOnly = 1
+    BillMonthly = 2
+    ProofOfPrepurchaseOnly = 3
+    GuestPass = 4
+    HardwarePromo = 5
+    Gift = 6
+    AutoGrant = 7
+    OEMTicket = 8
+    RecurringOption = 9
+    BillOnceOrCDKey = 10
+    Repurchaseable = 11
+    FreeOnDemand = 12
+    Rental = 13
+    CommercialLicense = 14
+    FreeCommercialLicense = 15
+    NumBillingTypes = 16
+    PaidList = [BillOnceOnly, BillMonthly, BillOnceOrCDKey, Repurchaseable, Rental]
+
+
 class Result:
     def __init__(self, result=False, code=EResult.Fail, *args):
         self.result = result
@@ -209,7 +230,7 @@ def main(args=None):
     cdn = MyCDNClient(steam)
     if cdn.packages_info:
         for package_id, info in steam.get_product_info(packages=cdn.packages_info)['packages'].items():
-            if 'depotids' in info and info['depotids'] and info['billingtype'] == 10:
+            if 'depotids' in info and info['depotids'] and info['billingtype'] in BillingType.PaidList:
                 app_id_list_all.update(list(info['appids'].values()))
                 app_id_list.extend(list(info['appids'].values()))
                 depot_id_list.extend(list(info['depotids'].values()))
