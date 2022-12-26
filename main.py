@@ -1,13 +1,12 @@
 import vdf
 import gevent
-import logging
 import os.path
-import platform
+import logging
 import argparse
+import platform
 import traceback
 import subprocess
 from pathlib import Path
-
 from six import itervalues, iteritems
 from steam.client import SteamClient
 from steam.client.cdn import CDNClient
@@ -107,12 +106,14 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
         d = vdf.VDFDict({'depots': {}})
     d['depots'][depot_id] = {'DecryptionKey': DecryptionKey.hex()}
     d = {'depots': dict(sorted(d['depots'].items()))}
+    delete_list = []
     if remove_old:
         for file in app_path.iterdir():
             if file.suffix == '.manifest':
                 depot_id_, manifest_gid_ = file.stem.split('_')
                 if depot_id_ == str(depot_id) and manifest_gid_ != str(manifest_gid):
                     file.unlink(missing_ok=True)
+                    delete_list.append(file.name)
     with open(manifest_path, 'wb') as f:
         f.write(manifest.serialize(compress=False))
     manifest.metadata.crc_clear = int(
@@ -123,7 +124,7 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
         f.write(manifest.serialize(compress=False))
     with open(app_path / 'config.vdf', 'w') as f:
         vdf.dump(d, f, pretty=True)
-    return Result(True, EResult.OK, app_id, depot_id, manifest_gid)
+    return Result(True, EResult.OK, app_id, depot_id, manifest_gid, delete_list)
 
 
 class MySteamClient(SteamClient):
