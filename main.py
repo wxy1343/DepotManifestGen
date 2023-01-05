@@ -243,13 +243,13 @@ def main(args=None):
     if args.list_apps:
         for app_id in app_id_list_all:
             app = fresh_resp['apps'][app_id]
-            if 'common' in app and app['common']['type'].lower() in ['game', 'dlc']:
+            if 'common' in app and app['common']['type'].lower() in ['game', 'dlc', 'application']:
                 logging.info("%s | %s | %s", app_id, app['common']['type'].upper(), app['common']['name'])
         exit()
     result_list = []
     for app_id in app_id_list:
         app = fresh_resp['apps'][app_id]
-        if 'common' in app and app['common']['type'].lower() in ['game', 'dlc']:
+        if 'common' in app and app['common']['type'].lower() in ['game', 'dlc', 'application']:
             for depot_id, depot in fresh_resp['apps'][app_id]['depots'].items():
                 if 'manifests' in depot and 'public' in depot['manifests'] and int(
                         depot_id) in {*cdn.licensed_depot_ids, *cdn.licensed_app_ids}:
