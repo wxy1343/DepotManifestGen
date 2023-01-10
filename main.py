@@ -138,8 +138,11 @@ class MySteamClient(SteamClient):
             self.credential_location = credential_location
         if not Path(self.credential_location).exists():
             Path(self.credential_location).mkdir(parents=True, exist_ok=True)
-        if sentry_path and Path(sentry_path).exists():
-            self.sentry_path = sentry_path
+        if sentry_path:
+            if Path(sentry_path).exists():
+                self.sentry_path = sentry_path
+            elif (Path('client') / sentry_path).exists():
+                self.sentry_path = str(Path('client') / sentry_path)
         SteamClient.__init__(self)
 
     def _handle_update_machine_auth(self, message):
