@@ -67,7 +67,7 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
     app_path = save_path / f'depots/{app_id}'
     manifest_path = app_path / f'{depot_id}_{manifest_gid}.manifest'
     if manifest_path.exists():
-        return Result(True, EResult.OK, app_id, depot_id, manifest_gid)
+        return Result(True, EResult.OK, app_id, depot_id, manifest_gid, [])
     while True:
         try:
             manifest_code = cdn.get_manifest_request_code(app_id, depot_id, manifest_gid)
@@ -79,16 +79,16 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
             exit(-1)
         except SteamError as e:
             if retry_num == 0:
-                return Result(False, e.eresult, app_id, depot_id, manifest_gid)
+                return Result(False, e.eresult, app_id, depot_id, manifest_gid, [])
             retry_num -= 1
             logging.warning(
                 f'{"":<10}app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}error: {e.message} result: {str(e.eresult)}')
             if e.eresult == EResult.AccessDenied:
-                return Result(False, e.eresult, app_id, depot_id, manifest_gid)
+                return Result(False, e.eresult, app_id, depot_id, manifest_gid, [])
             gevent.idle()
         except:
             logging.error(traceback.format_exc())
-            return Result(False, EResult.Fail, app_id, depot_id, manifest_gid)
+            return Result(False, EResult.Fail, app_id, depot_id, manifest_gid, [])
     logging.info(
         f'{"":<10}app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}DecryptionKey: {DecryptionKey.hex()}')
     manifest.decrypt_filenames(DecryptionKey)
