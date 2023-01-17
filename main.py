@@ -253,6 +253,8 @@ def main(args=None):
     for app_id in app_id_list:
         app = fresh_resp['apps'][app_id]
         if 'common' in app and app['common']['type'].lower() in ['game', 'dlc', 'application']:
+            if 'depots' not in fresh_resp['apps'][app_id]:
+                continue
             for depot_id, depot in fresh_resp['apps'][app_id]['depots'].items():
                 if 'manifests' in depot and 'public' in depot['manifests'] and int(
                         depot_id) in {*cdn.licensed_depot_ids, *cdn.licensed_app_ids}:
