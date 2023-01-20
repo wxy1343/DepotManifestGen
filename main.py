@@ -223,7 +223,7 @@ def main(args=None):
             result = steam.cli_login(args.username, args.password)
         else:
             result = steam.login(args.username, args.password, args.login_key, args.auth_code, args.two_factor_code,
-                                 args.login_id)
+                                 int(args.login_id) if args.login_id else None)
     if result != EResult.OK:
         logging.error(f'Login failure reason: {result.__repr__()}')
         exit(result)
