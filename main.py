@@ -83,15 +83,15 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
             if retry_num == 0:
                 return Result(result=False, code=e.eresult, app_id=app_id, depot_id=depot_id, manifest_gid=manifest_gid)
             retry_num -= 1
-            logging.warning(
+            log.warning(
                 f'{"":<10}app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}error: {e.message} result: {str(e.eresult)}')
             if e.eresult == EResult.AccessDenied:
                 return Result(result=False, code=e.eresult, app_id=app_id, depot_id=depot_id, manifest_gid=manifest_gid)
             gevent.idle()
         except:
-            logging.error(traceback.format_exc())
+            log.error(traceback.format_exc())
             return Result(result=False, code=EResult.Fail, app_id=app_id, depot_id=depot_id, manifest_gid=manifest_gid)
-    logging.info(
+    log.info(
         f'{"":<10}app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}DecryptionKey: {depot_key.hex()}')
     manifest.decrypt_filenames(depot_key)
     manifest.signature = ContentManifestSignature()
@@ -132,7 +132,7 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
 
 class MySteamClient(SteamClient):
     credential_location = str(Path('client').absolute())
-    _LOG = logging.getLogger('DepotManifestGen')
+    _LOG = logging.getLogger('MySteamClient')
     sentry_path = None
     login_key_path = None
 
@@ -182,6 +182,7 @@ class MySteamClient(SteamClient):
 
 
 class MyCDNClient(CDNClient):
+    _LOG = logging.getLogger('MyCDNClient')
     packages_info = None
 
     def load_licenses(self):
@@ -206,6 +207,9 @@ class MyCDNClient(CDNClient):
             self.licensed_depot_ids.update(info['depotids'].values())
 
 
+log = logging.getLogger('DepotManifestGen')
+
+
 def main(args=None):
     if args:
         args = parser.parse_args(args)
@@ -228,7 +232,7 @@ def main(args=None):
             result = steam.login(args.username, args.password, args.login_key, args.auth_code, args.two_factor_code,
                                  int(args.login_id) if args.login_id else None)
     if result != EResult.OK:
-        logging.error(f'Login failure reason: {result.__repr__()}')
+        log.error(f'Login failure reason: {result.__repr__()}')
         exit(result)
     app_id_list = []
     app_id_list_all = set()
@@ -250,7 +254,7 @@ def main(args=None):
         for app_id in app_id_list_all:
             app = fresh_resp['apps'][app_id]
             if 'common' in app and app['common']['type'].lower() in ['game', 'dlc', 'application']:
-                logging.info("%s | %s | %s", app_id, app['common']['type'].upper(), app['common']['name'])
+                log.info("%s | %s | %s", app_id, app['common']['type'].upper(), app['common']['name'])
         exit()
     result_list = []
     for app_id in app_id_list:
