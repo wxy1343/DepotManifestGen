@@ -51,14 +51,16 @@ class BillingType:
     PaidList = [BillOnceOnly, BillMonthly, BillOnceOrCDKey, Repurchaseable, Rental]
 
 
-class Result:
-    def __init__(self, result=False, code=EResult.Fail, *args):
+class Result(dict):
+    def __init__(self, result=False, code=EResult.Fail, *args, **kwargs):
+        super().__init__()
         self.result = result
         self.args = args
         self.code = code
+        self.update(kwargs)
 
     def __bool__(self):
-        return self.result
+        return bool(self.result)
 
 
 def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_path=None, retry_num=10):
@@ -67,31 +69,31 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
     app_path = save_path / f'depots/{app_id}'
     manifest_path = app_path / f'{depot_id}_{manifest_gid}.manifest'
     if manifest_path.exists():
-        return Result(True, EResult.OK, app_id, depot_id, manifest_gid, [])
+        return Result(result=True, code=EResult.OK, app_id=app_id, depot_id=depot_id, manifest_gid=manifest_gid)
     while True:
         try:
             manifest_code = cdn.get_manifest_request_code(app_id, depot_id, manifest_gid)
             manifest = cdn.get_manifest(app_id, depot_id, manifest_gid, decrypt=False,
                                         manifest_request_code=manifest_code)
-            DecryptionKey = cdn.get_depot_key(manifest.app_id, manifest.depot_id)
+            depot_key = cdn.get_depot_key(manifest.app_id, manifest.depot_id)
             break
         except KeyboardInterrupt:
             exit(-1)
         except SteamError as e:
             if retry_num == 0:
-                return Result(False, e.eresult, app_id, depot_id, manifest_gid, [])
+                return Result(result=False, code=e.eresult, app_id=app_id, depot_id=depot_id, manifest_gid=manifest_gid)
             retry_num -= 1
             logging.warning(
                 f'{"":<10}app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}error: {e.message} result: {str(e.eresult)}')
             if e.eresult == EResult.AccessDenied:
-                return Result(False, e.eresult, app_id, depot_id, manifest_gid, [])
+                return Result(result=False, code=e.eresult, app_id=app_id, depot_id=depot_id, manifest_gid=manifest_gid)
             gevent.idle()
         except:
             logging.error(traceback.format_exc())
-            return Result(False, EResult.Fail, app_id, depot_id, manifest_gid, [])
+            return Result(result=False, code=EResult.Fail, app_id=app_id, depot_id=depot_id, manifest_gid=manifest_gid)
     logging.info(
-        f'{"":<10}app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}DecryptionKey: {DecryptionKey.hex()}')
-    manifest.decrypt_filenames(DecryptionKey)
+        f'{"":<10}app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}DecryptionKey: {depot_key.hex()}')
+    manifest.decrypt_filenames(depot_key)
     manifest.signature = ContentManifestSignature()
     for mapping in manifest.payload.mappings:
         mapping.filename = mapping.filename.rstrip('\x00 \n\t')
@@ -104,7 +106,7 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
             d = vdf.load(f)
     else:
         d = vdf.VDFDict({'depots': {}})
-    d['depots'][depot_id] = {'DecryptionKey': DecryptionKey.hex()}
+    d['depots'][depot_id] = {'DecryptionKey': depot_key.hex()}
     d = {'depots': dict(sorted(d['depots'].items()))}
     delete_list = []
     if remove_old:
@@ -124,7 +126,8 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
         f.write(manifest.serialize(compress=False))
     with open(app_path / 'config.vdf', 'w') as f:
         vdf.dump(d, f, pretty=True)
-    return Result(True, EResult.OK, app_id, depot_id, manifest_gid, delete_list)
+    return Result(result=True, code=EResult.OK, app_id=app_id, depot_id=depot_id, manifest_gid=manifest_gid,
+                  delete_list=delete_list)
 
 
 class MySteamClient(SteamClient):
