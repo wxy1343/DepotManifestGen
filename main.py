@@ -83,8 +83,7 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
             if retry_num == 0:
                 return Result(result=False, code=e.eresult, app_id=app_id, depot_id=depot_id, manifest_gid=manifest_gid)
             retry_num -= 1
-            log.warning(
-                f'{"":<10}app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}error: {e.message} result: {str(e.eresult)}')
+            log.warning(f'{e.message} result: {str(e.eresult)}')
             if e.eresult == EResult.AccessDenied:
                 return Result(result=False, code=e.eresult, app_id=app_id, depot_id=depot_id, manifest_gid=manifest_gid)
             gevent.idle()
