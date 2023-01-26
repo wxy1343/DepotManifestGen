@@ -48,7 +48,7 @@ class BillingType:
     CommercialLicense = 14
     FreeCommercialLicense = 15
     NumBillingTypes = 16
-    PaidList = [BillOnceOnly, BillMonthly, BillOnceOrCDKey, Repurchaseable, Rental]
+    PaidList = [BillOnceOnly, BillMonthly, BillOnceOrCDKey, Repurchaseable, Rental, ProofOfPrepurchaseOnly]
 
 
 class Result(dict):
