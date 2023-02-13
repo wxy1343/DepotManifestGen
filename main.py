@@ -1,12 +1,12 @@
 import vdf
 import gevent
+import struct
 import os.path
 import logging
 import argparse
-import platform
 import traceback
-import subprocess
 from pathlib import Path
+from binascii import crc32
 from six import itervalues, iteritems
 from steam.client import SteamClient
 from steam.client.cdn import CDNClient
@@ -115,12 +115,8 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
                 if depot_id_ == str(depot_id) and manifest_gid_ != str(manifest_gid):
                     file.unlink(missing_ok=True)
                     delete_list.append(file.name)
-    with open(manifest_path, 'wb') as f:
-        f.write(manifest.serialize(compress=False))
-    manifest.metadata.crc_clear = int(
-        subprocess.check_output([Path(
-            os.path.dirname(__file__)) / f'calc_crc_clear{".exe" if platform.system().lower() == "windows" else ""}',
-                                 manifest_path]).strip())
+    buffer = manifest.payload.SerializeToString()
+    manifest.metadata.crc_clear = crc32(struct.pack('<I', len(buffer)) + buffer)
     with open(manifest_path, 'wb') as f:
         f.write(manifest.serialize(compress=False))
     with open(app_path / 'config.vdf', 'w') as f:

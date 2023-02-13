@@ -60,12 +60,14 @@ for mapping in manifest.payload.mappings:
 # 对文件名排序
 manifest.payload.mappings.sort(key=lambda x: x.filename.lower())
 # 通过payload计算crc_clear
-manifest.metadata.crc_clear = calc_clear_crc(manifest.payload)
+manifest.metadata.crc_clear = crc32(manifest.payload.size + manifest.payload)
 ```
 
 * `crc_clear`计算
-    * 通过对steam逆向分析后找到了计算`crc_clear`算法，具体代码在`calc_crc_clear.c`
-    * 分析得出steam是对`ContentManifestPayload`部分进行了`crc`计算，具体过程没搞懂，只复制了汇编代码
+    * ~~通过对steam逆向分析后找到了计算`crc_clear`算法，具体代码在`calc_crc_clear.c`~~
+    * ~~分析得出steam是对`ContentManifestPayload`部分进行了`crc`计算，具体过程没搞懂，只复制了汇编代码~~
+    * 对`ContentManifestPayload`的长度和数据打包后使用`crc32`计算得到
+    * 参考[Manifest CRC Generation](https://cs.rin.ru/forum/viewtopic.php?t=124734)
 
 ## steam导入清单文件后下载游戏
 
