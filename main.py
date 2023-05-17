@@ -260,8 +260,12 @@ def main(args=None):
             for depot_id, depot in fresh_resp['apps'][app_id]['depots'].items():
                 if 'manifests' in depot and 'public' in depot['manifests'] and int(
                         depot_id) in {*cdn.licensed_depot_ids, *cdn.licensed_app_ids}:
-                    result_list.append(gevent.spawn(get_manifest, cdn, app_id, depot_id, depot['manifests']['public'],
-                                                    args.remove_old))
+                    manifest_gid = depot['manifests']['public']
+                    if isinstance(manifest_gid, dict):
+                        manifest_gid = manifest_gid.get('gid')
+                    if not isinstance(manifest_gid, str):
+                        continue
+                    result_list.append(gevent.spawn(get_manifest, cdn, app_id, depot_id, manifest_gid, args.remove_old))
                     gevent.idle()
     try:
         gevent.joinall(result_list)
