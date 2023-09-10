@@ -7,8 +7,9 @@ import argparse
 import traceback
 from pathlib import Path
 from binascii import crc32
-from six import itervalues, iteritems
+from steam.core.cm import CMClient
 from steam.client import SteamClient
+from six import itervalues, iteritems
 from steam.client.cdn import CDNClient
 from steam.enums import EResult, EType
 from steam.exceptions import SteamError
@@ -28,6 +29,7 @@ parser.add_argument('-c', '--cli', action='store_true', required=False)
 parser.add_argument('-L', '--level', required=False, default='INFO')
 parser.add_argument('-C', '--credential-location', required=False)
 parser.add_argument('-r', '--remove-old', action='store_true', required=False)
+parser.add_argument('-n', '--retry', type=int, required=False, default=1)
 
 
 class BillingType:
@@ -48,7 +50,7 @@ class BillingType:
     CommercialLicense = 14
     FreeCommercialLicense = 15
     NumBillingTypes = 16
-    PaidList = [BillOnceOnly, BillMonthly, BillOnceOrCDKey, Repurchaseable, Rental, ProofOfPrepurchaseOnly]
+    PaidList = [BillOnceOnly, BillMonthly, BillOnceOrCDKey, Repurchaseable, Rental, ProofOfPrepurchaseOnly, Gift]
 
 
 class Result(dict):
@@ -131,7 +133,8 @@ class MySteamClient(SteamClient):
     sentry_path = None
     login_key_path = None
 
-    def __init__(self, credential_location=None, sentry_path=None):
+    def __init__(self, credential_location=None, sentry_path=None, retry=1):
+        self.retry = retry
         if credential_location:
             self.credential_location = credential_location
         if not Path(self.credential_location).exists():
@@ -175,6 +178,12 @@ class MySteamClient(SteamClient):
                     with self.login_key_path.open() as f:
                         self.login_key = f.read()
 
+    def connect(self, *args, **kwargs):
+        """Attempt to establish connection, see :meth:`.CMClient.connect`"""
+        self._bootstrap_cm_list_from_file()
+        kwargs['retry'] = self.retry
+        return CMClient.connect(self, *args, **kwargs)
+
 
 class MyCDNClient(CDNClient):
     _LOG = logging.getLogger('MyCDNClient')
@@ -215,7 +224,7 @@ def main(args=None):
     else:
         level = logging.INFO
     logging.basicConfig(format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s', level=level)
-    steam = MySteamClient(args.credential_location, args.sentry_path)
+    steam = MySteamClient(args.credential_location, args.sentry_path, args.retry)
     steam.username = args.username
     if args.login_key:
         steam.login_key = args.login_key

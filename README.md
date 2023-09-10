@@ -15,6 +15,7 @@
 * `-L, --level`: 日志,默认`INFO`
 * `-C, --credential-location`: 账户凭据存储路径,默认`client`
 * `-r, --remove-old`: 爬取到新的清单后是否删除旧的
+* `-n, --retry`: cm重连次数
 
 ## 清单文件简介
 
