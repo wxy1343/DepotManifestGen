@@ -75,6 +75,8 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
     while True:
         try:
             manifest_code = cdn.get_manifest_request_code(app_id, depot_id, manifest_gid)
+            print(type(manifest_gid))
+            print(manifest_gid)
             manifest = cdn.get_manifest(app_id, depot_id, manifest_gid, decrypt=False,
                                         manifest_request_code=manifest_code)
             depot_key = cdn.get_depot_key(manifest.app_id, manifest.depot_id)
