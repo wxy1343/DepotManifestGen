@@ -94,6 +94,11 @@ def get_manifest(cdn, app_id, depot_id, manifest_gid, remove_old=False, save_pat
         except:
             log.error(traceback.format_exc())
             return Result(result=False, code=EResult.Fail, app_id=app_id, depot_id=depot_id, manifest_gid=manifest_gid)
+    if isinstance(manifest_gid, dict):
+        # For some depots, Steam has started returning a dict
+        # {"public": {"gid": GID, "size": ..., "download": ...}, ...}
+        # instead of a simple map {"public": GID, ...}
+        manifest_gid = manifest_gid['gid']
     log.info(
         f'{"":<10}app_id: {app_id:<8}{"":<10}depot_id: {depot_id:<8}{"":<10}manifest_gid: {manifest_gid:20}{"":<10}DecryptionKey: {depot_key.hex()}')
     manifest.decrypt_filenames(depot_key)
