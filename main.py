@@ -245,7 +245,7 @@ def main(args=None):
     cdn = MyCDNClient(steam)
     if cdn.packages_info:
         for package_id, info in steam.get_product_info(packages=cdn.packages_info)['packages'].items():
-            if 'depotids' in info and info['depotids'] and info['billingtype'] in BillingType.PaidList:
+            if 'appids' in info and 'depotids' in info and info['billingtype'] in BillingType.PaidList:
                 app_id_list_all.update(list(info['appids'].values()))
                 app_id_list.extend(list(info['appids'].values()))
                 depot_id_list.extend(list(info['depotids'].values()))
@@ -254,16 +254,17 @@ def main(args=None):
         app_id_list = {int(app_id) for app_id in args.app_id.split(',')}
         app_id_list_all.update(app_id_list)
     fresh_resp = steam.get_product_info(app_id_list)
+    app_types = ['game', 'dlc', 'application', 'music']
     if args.list_apps:
         for app_id in app_id_list_all:
             app = fresh_resp['apps'][app_id]
-            if 'common' in app and app['common']['type'].lower() in ['game', 'dlc', 'application']:
+            if 'common' in app and app['common']['type'].lower() in app_types:
                 log.info("%s | %s | %s", app_id, app['common']['type'].upper(), app['common']['name'])
         exit()
     result_list = []
     for app_id in app_id_list:
         app = fresh_resp['apps'][app_id]
-        if 'common' in app and app['common']['type'].lower() in ['game', 'dlc', 'application']:
+        if 'common' in app and app['common']['type'].lower() in app_types:
             if 'depots' not in fresh_resp['apps'][app_id]:
                 continue
             for depot_id, depot in fresh_resp['apps'][app_id]['depots'].items():
